@@ -16,6 +16,8 @@ from pyroboxCore import config, logger, SimpleHTTPRequestHandler as SH_base, Dea
 
 * Lets make our first server
 ```python
+from http import HTTPStatus
+
 from pyroboxCore import config, logger, SimpleHTTPRequestHandler as SH_base, run as run_server
 
 class SH(SH_base):
@@ -30,7 +32,7 @@ def default_get(self: SH, *args, **kwargs):
 	"""
 		Handles all the GET requests
 	"""
-	self.send_text("Hello World")
+	self.send_text(HTTPStatus.OK, "Hello World")
 
 
 def run():
@@ -62,14 +64,14 @@ def index(self: SH, *args, **kwargs):
 	"""
 		Handles index page ("/") request only
 	"""
-	self.send_text("Hello World")
+	self.send_text(HTTPStatus.OK, "Hello World")
 
 @SH.on_req('HEAD', url='/test') # @SH.on_req has many more args to handle request url and query string. Check the code comments for more info
 def test(self: SH, *args, **kwargs):
 	"""
 		Handles requests to "/test" only
 	"""
-	self.send_text("This is a test")
+	self.send_text(HTTPStatus.OK, "This is a test")
 	# you can also send json data
 	# self.send_json({"test": "This is a test"})
 
@@ -109,7 +111,27 @@ def default_get(self: SH, *args, **kwargs):
 	"""
 		Handles all the GET requests
 	"""
-	self.send_text("Hello World")
+	return self.send_text(HTTPStatus.OK, """
+	<html>
+<head>
+<title>Post demo</title>
+</head>
+<body>
+	<!-- multipart form -->
+	<form action="/post_address" method="post" enctype="multipart/form-data">
+		<!-- text field -->
+		<label for="text1">Name: </label>
+		<input type="text" name="text1" placeholder="Enter Name" />
+		</br>
+		<label for="text2">Age: </label>
+		<input type="text" name="text2" placeholder="Enter Age" />
+		</br>
+		<input type="submit" value="submit" />
+	</form>
+</body>
+
+</html>
+	""", content_type="text/html; charset=utf-8")
 
 @SH.on_req('POST')
 def default_post(self: SH, *args, **kwargs):
@@ -123,6 +145,7 @@ def default_post(self: SH, *args, **kwargs):
 	post.start() # start the post data processing
 	# this will gather content_length, content_type, boundary from the request headers and reach the end of the headers (and the 1st boundary at line 0)
 
+	n = 1
 	while True:
 		line = post.get()
 		# you can also handle form fields using `post.get_part(verify_name=None, varify_msg=None)`
@@ -131,8 +154,15 @@ def default_post(self: SH, *args, **kwargs):
 		if line is None:
 			break
 		# do something with the line
-		print(line)
+		print(f"Line {n}: {line}")
+		n += 1
+		
 	print("The post data is over")
+
+
+	# you can also send a file/text/json response
+	return self.send_text(HTTPStatus.OK, "<b>Post data received</b>", content_type="text/html; charset=utf-8")
+	# you can also post process in the function if you just don't want to return anything yet
 
 
 def run():
