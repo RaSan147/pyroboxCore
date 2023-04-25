@@ -1467,6 +1467,8 @@ class DealPostData:
 
 	def __init__(self, req:SimpleHTTPRequestHandler) -> None:
 		self.req = req
+		self.content_length = None
+		self.content_type = None
 
 
 	refresh = "<br><br><div class='pagination center' onclick='window.location.reload()'>Refresh &#128259;</div>"
@@ -1530,13 +1532,14 @@ class DealPostData:
 	def start(self):
 		'''reads upto line 0'''
 		req = self.req
-		content_type = req.headers['content-type']
+		self.content_type = req.headers['content-type']
 
-		if not content_type:
+		if not self.content_type:
 			raise PostError("Content-Type header doesn't contain boundary")
-		self.boundary = content_type.split("=")[1].encode()
+		self.boundary = self.content_type.split("=")[1].encode()
 
 		self.remainbytes = int(req.headers['content-length'])
+		self.content_length = self.remainbytes
 
 
 		self.pass_bound()# LINE 0
