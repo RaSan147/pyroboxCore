@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import traceback
 
 from pyroboxCore import config, logger, SimpleHTTPRequestHandler as SH_base, DealPostData as DPD, run as run_server
 
@@ -29,6 +30,10 @@ def default_get(self: SH, *args, **kwargs):
 		<label for="text2">Age: </label>
 		<input type="text" name="text2" placeholder="Enter Age" />
 		</br>
+
+		<!-- file field -->
+		<label for="file1">File: </label>
+		<input type="file" name="file1" />
 		<input type="submit" value="submit" />
 	</form>
 </body>
@@ -41,23 +46,28 @@ def default_post(self: SH, *args, **kwargs):
 	"""
 		Handles all the POST requests
 	"""
+	print("Post request received")
 	# you can use the DealPostData class to deal with post data
 
 	post = DPD(self)
-
-	post.start() # start the post data processing
+	try:
+		post.start() # start the post data processing
+	except:
+		traceback.print_exc()
 	# this will gather content_length, content_type, boundary from the request headers and reach the end of the headers (and the 1st boundary at line 0)
 
 	n = 1
+	line = None
 	while True:
-		line = post.get()
+		print(f"Line {n}: {line}")
+		line = post.get(Timeout=1)
+		print(f"Line {n}: {line}")
 		# you can also handle form fields using `post.get_part(verify_name=None, varify_msg=None)`
 		# optional `verify_name` and `verify_msg` args can be used to verify the name of the field and the message
 		# if not varified, raise `PostError` (this will also cancel the post connection. So you can actually block requests before they even complete) 
 		if line is None:
 			break
 		# do something with the line
-		print(f"Line {n}: {line}")
 		n += 1
 	print("The post data is over")
 
